@@ -1,12 +1,20 @@
 "use client";
 
-import { useState } from "react";
+import { Suspense, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import HeroNormal from "@/components/HeroNormal";
 import blogs, { blogCategories, getBlogById, getRelatedBlogs, getRecentBlogs } from "../../data/blogs";
 
 export default function BlogDetailsPage() {
+  return (
+    <Suspense fallback={<div></div>}>
+      <BlogDetailsContent />
+    </Suspense>
+  );
+}
+
+function BlogDetailsContent() {
   const searchParams = useSearchParams();
   const blogId = searchParams.get("id");
   const blog = getBlogById(blogId) || blogs[0];

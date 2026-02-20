@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { Suspense, useState, useEffect } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import HeroNormal from "@/components/HeroNormal";
@@ -10,6 +10,14 @@ import { getProductById } from "../../data/products";
 import products from "../../data/products";
 
 export default function ShopDetailsPage() {
+  return (
+    <Suspense fallback={<div></div>}>
+      <ShopDetailsContent />
+    </Suspense>
+  );
+}
+
+function ShopDetailsContent() {
   const searchParams = useSearchParams();
   const productId = searchParams.get("id");
   const product = getProductById(productId) || products[0];

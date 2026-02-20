@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useMemo } from "react";
+import { Suspense, useState, useEffect, useMemo } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import HeroNormal from "@/components/HeroNormal";
@@ -16,6 +16,14 @@ import products, {
 } from "../../data/products";
 
 export default function ShopPage() {
+  return (
+    <Suspense fallback={<div></div>}>
+      <ShopContent />
+    </Suspense>
+  );
+}
+
+function ShopContent() {
   const searchParams = useSearchParams();
   const { addToCart, toggleWishlist } = useCart();
 
