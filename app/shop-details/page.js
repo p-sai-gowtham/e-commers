@@ -1,60 +1,67 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useSearchParams } from "next/navigation";
+import Link from "next/link";
 import HeroNormal from "@/components/HeroNormal";
 import Breadcrumb from "@/components/Breadcrumb";
-import Link from "next/link";
+import { useCart } from "../../context/CartContext";
+import { getProductById } from "../../data/products";
+import products from "../../data/products";
 
 export default function ShopDetailsPage() {
-  const [selectedImage, setSelectedImage] = useState(
-    "/img/product/details/product-details-1.jpg"
-  );
+  const searchParams = useSearchParams();
+  const productId = searchParams.get("id");
+  const product = getProductById(productId) || products[0];
+  const { addToCart, toggleWishlist, isInWishlist } = useCart();
+
+  const [selectedImage, setSelectedImage] = useState(product.detailImages[0]);
   const [quantity, setQuantity] = useState(1);
   const [activeTab, setActiveTab] = useState("description");
 
-  const thumbnails = [
-    {
-      thumb: "/img/product/details/thumb-1.jpg",
-      big: "/img/product/details/product-details-2.jpg",
-    },
-    {
-      thumb: "/img/product/details/thumb-2.jpg",
-      big: "/img/product/details/product-details-3.jpg",
-    },
-    {
-      thumb: "/img/product/details/thumb-3.jpg",
-      big: "/img/product/details/product-details-5.jpg",
-    },
-    {
-      thumb: "/img/product/details/thumb-4.jpg",
-      big: "/img/product/details/product-details-4.jpg",
-    },
-  ];
+  useEffect(() => {
+    setSelectedImage(product.detailImages[0]);
+    setQuantity(1);
+    setActiveTab("description");
+  }, [product]);
 
-  const relatedProducts = [
-    { img: "/img/product/product-1.jpg", name: "Crab Pool Security", price: "$30.00" },
-    { img: "/img/product/product-2.jpg", name: "Crab Pool Security", price: "$30.00" },
-    { img: "/img/product/product-3.jpg", name: "Crab Pool Security", price: "$30.00" },
-    { img: "/img/product/product-7.jpg", name: "Crab Pool Security", price: "$30.00" },
-  ];
+  const relatedProducts = products
+    .filter((p) => p.category === product.category && p.id !== product.id)
+    .slice(0, 4);
 
-  const handleDecrement = () => {
-    setQuantity((prev) => (prev > 1 ? prev - 1 : 1));
+  const handleAddToCart = (e) => {
+    e.preventDefault();
+    addToCart(product, quantity);
   };
 
-  const handleIncrement = () => {
-    setQuantity((prev) => prev + 1);
+  const handleToggleWishlist = (e) => {
+    e.preventDefault();
+    toggleWishlist(product);
+  };
+
+  const renderStars = (rating) => {
+    const stars = [];
+    for (let i = 1; i <= 5; i++) {
+      if (i <= rating) {
+        stars.push(<i key={i} className="fa fa-star"></i>);
+      } else if (i - 0.5 <= rating) {
+        stars.push(<i key={i} className="fa fa-star-half-o"></i>);
+      } else {
+        stars.push(<i key={i} className="fa fa-star-o"></i>);
+      }
+    }
+    return stars;
   };
 
   return (
     <>
       <HeroNormal />
       <Breadcrumb
-        title="Vegetable's Package"
+        title={product.name}
         pages={[
           { label: "Home", href: "/" },
-          { label: "Vegetables", href: "/" },
-          { label: "Vegetable's Package" },
+          { label: product.category, href: `/shop?category=${encodeURIComponent(product.category)}` },
+          { label: product.name },
         ]}
       />
 
@@ -69,17 +76,20 @@ export default function ShopDetailsPage() {
                   <img
                     className="product__details__pic__item--large"
                     src={selectedImage}
-                    alt=""
+                    alt={product.name}
                   />
                 </div>
                 <div className="product__details__pic__slider">
-                  {thumbnails.map((thumb, index) => (
+                  {product.thumbImages.map((thumb, index) => (
                     <img
                       key={index}
-                      src={thumb.thumb}
+                      src={thumb}
                       alt=""
-                      onClick={() => setSelectedImage(thumb.big)}
-                      style={{ cursor: "pointer" }}
+                      onClick={() => setSelectedImage(product.detailImages[index])}
+                      style={{
+                        cursor: "pointer",
+                        opacity: selectedImage === product.detailImages[index] ? 1 : 0.6,
+                      }}
                     />
                   ))}
                 </div>
@@ -89,28 +99,26 @@ export default function ShopDetailsPage() {
             {/* Product Info */}
             <div className="col-lg-6 col-md-6">
               <div className="product__details__text">
-                <h3>Vetgetable&#39;s Package</h3>
+                <h3>{product.name}</h3>
                 <div className="product__details__rating">
-                  <i className="fa fa-star"></i>
-                  <i className="fa fa-star"></i>
-                  <i className="fa fa-star"></i>
-                  <i className="fa fa-star"></i>
-                  <i className="fa fa-star-half-o"></i>
-                  <span>(18 reviews)</span>
+                  {renderStars(product.rating)}
+                  <span>({product.reviews} reviews)</span>
                 </div>
-                <div className="product__details__price">$50.00</div>
-                <p>
-                  Mauris blandit aliquet elit, eget tincidunt nibh pulvinar a.
-                  Vestibulum ac diam sit amet quam vehicula elementum sed sit amet
-                  dui. Sed porttitor lectus nibh. Vestibulum ac diam sit amet quam
-                  vehicula elementum sed sit amet dui. Proin eget tortor risus.
-                </p>
+                <div className="product__details__price">
+                  ${product.price.toFixed(2)}
+                  {product.oldPrice && (
+                    <span style={{ textDecoration: "line-through", color: "#999", fontSize: 16, marginLeft: 10 }}>
+                      ${product.oldPrice.toFixed(2)}
+                    </span>
+                  )}
+                </div>
+                <p>{product.description}</p>
                 <div className="product__details__quantity">
                   <div className="quantity">
                     <div className="pro-qty">
                       <span
                         className="dec qtybtn"
-                        onClick={handleDecrement}
+                        onClick={() => setQuantity((prev) => (prev > 1 ? prev - 1 : 1))}
                         style={{ cursor: "pointer" }}
                       >
                         -
@@ -118,7 +126,7 @@ export default function ShopDetailsPage() {
                       <input type="text" value={quantity} readOnly />
                       <span
                         className="inc qtybtn"
-                        onClick={handleIncrement}
+                        onClick={() => setQuantity((prev) => prev + 1)}
                         style={{ cursor: "pointer" }}
                       >
                         +
@@ -126,10 +134,15 @@ export default function ShopDetailsPage() {
                     </div>
                   </div>
                 </div>
-                <a href="#" className="primary-btn">
-                  ADD TO CARD
+                <a href="#" className="primary-btn" onClick={handleAddToCart}>
+                  ADD TO CART
                 </a>
-                <a href="#" className="heart-icon">
+                <a
+                  href="#"
+                  className="heart-icon"
+                  onClick={handleToggleWishlist}
+                  style={{ color: isInWishlist(product.id) ? "#e53637" : undefined }}
+                >
                   <span className="icon_heart_alt"></span>
                 </a>
                 <ul>
@@ -143,23 +156,15 @@ export default function ShopDetailsPage() {
                     </span>
                   </li>
                   <li>
-                    <b>Weight</b> <span>0.5 kg</span>
+                    <b>Weight</b> <span>{product.weight}</span>
                   </li>
                   <li>
                     <b>Share on</b>
                     <div className="share">
-                      <a href="#">
-                        <i className="fa fa-facebook"></i>
-                      </a>
-                      <a href="#">
-                        <i className="fa fa-twitter"></i>
-                      </a>
-                      <a href="#">
-                        <i className="fa fa-instagram"></i>
-                      </a>
-                      <a href="#">
-                        <i className="fa fa-pinterest"></i>
-                      </a>
+                      <a href="#"><i className="fa fa-facebook"></i></a>
+                      <a href="#"><i className="fa fa-twitter"></i></a>
+                      <a href="#"><i className="fa fa-instagram"></i></a>
+                      <a href="#"><i className="fa fa-pinterest"></i></a>
                     </div>
                   </li>
                 </ul>
@@ -197,7 +202,7 @@ export default function ShopDetailsPage() {
                       role="tab"
                       style={{ cursor: "pointer" }}
                     >
-                      Reviews <span>(1)</span>
+                      Reviews <span>({product.reviews})</span>
                     </a>
                   </li>
                 </ul>
@@ -205,85 +210,35 @@ export default function ShopDetailsPage() {
                   {activeTab === "description" && (
                     <div className="tab-pane active" role="tabpanel">
                       <div className="product__details__tab__desc">
-                        <h6>Products Infomation</h6>
-                        <p>
-                          Vestibulum ac diam sit amet quam vehicula elementum sed sit
-                          amet dui. Pellentesque in ipsum id orci porta dapibus. Proin
-                          eget tortor risus. Vivamus suscipit tortor eget felis
-                          porttitor volutpat. Vestibulum ac diam sit amet quam vehicula
-                          elementum sed sit amet dui. Donec rutrum congue leo eget
-                          malesuada. Vivamus suscipit tortor eget felis porttitor
-                          volutpat. Curabitur arcu erat, accumsan id imperdiet et,
-                          porttitor at sem. Praesent sapien massa, convallis a
-                          pellentesque nec, egestas non nisi. Vestibulum ac diam sit
-                          amet quam vehicula elementum sed sit amet dui. Vestibulum ante
-                          ipsum primis in faucibus orci luctus et ultrices posuere
-                          cubilia Curae; Donec velit neque, auctor sit amet aliquam vel,
-                          ullamcorper sit amet ligula. Proin eget tortor risus.
-                        </p>
-                        <p>
-                          Praesent sapien massa, convallis a pellentesque nec, egestas
-                          non nisi. Lorem ipsum dolor sit amet, consectetur adipiscing
-                          elit. Mauris blandit aliquet elit, eget tincidunt nibh pulvinar
-                          a. Cras ultricies ligula sed magna dictum porta. Cras ultricies
-                          ligula sed magna dictum porta. Sed porttitor lectus nibh. Mauris
-                          blandit aliquet elit, eget tincidunt nibh pulvinar a. Vestibulum
-                          ac diam sit amet quam vehicula elementum sed sit amet dui. Sed
-                          porttitor lectus nibh. Vestibulum ac diam sit amet quam vehicula
-                          elementum sed sit amet dui. Proin eget tortor risus.
-                        </p>
+                        <h6>Product Description</h6>
+                        <p>{product.description}</p>
                       </div>
                     </div>
                   )}
                   {activeTab === "information" && (
                     <div className="tab-pane active" role="tabpanel">
                       <div className="product__details__tab__desc">
-                        <h6>Products Infomation</h6>
-                        <p>
-                          Vestibulum ac diam sit amet quam vehicula elementum sed sit
-                          amet dui. Pellentesque in ipsum id orci porta dapibus. Proin
-                          eget tortor risus. Vivamus suscipit tortor eget felis
-                          porttitor volutpat. Vestibulum ac diam sit amet quam vehicula
-                          elementum sed sit amet dui. Donec rutrum congue leo eget
-                          malesuada. Vivamus suscipit tortor eget felis porttitor
-                          volutpat. Curabitur arcu erat, accumsan id imperdiet et,
-                          porttitor at sem. Praesent sapien massa, convallis a
-                          pellentesque nec, egestas non nisi. Vestibulum ac diam sit
-                          amet quam vehicula elementum sed sit amet dui. Vestibulum ante
-                          ipsum primis in faucibus orci luctus et ultrices posuere
-                          cubilia Curae; Donec velit neque, auctor sit amet aliquam vel,
-                          ullamcorper sit amet ligula. Proin eget tortor risus.
-                        </p>
-                        <p>
-                          Praesent sapien massa, convallis a pellentesque nec, egestas
-                          non nisi. Lorem ipsum dolor sit amet, consectetur adipiscing
-                          elit. Mauris blandit aliquet elit, eget tincidunt nibh pulvinar
-                          a. Cras ultricies ligula sed magna dictum porta. Cras ultricies
-                          ligula sed magna dictum porta. Sed porttitor lectus nibh. Mauris
-                          blandit aliquet elit, eget tincidunt nibh pulvinar a.
-                        </p>
+                        <h6>Product Information</h6>
+                        <p><strong>Weight:</strong> {product.weight}</p>
+                        <p><strong>Category:</strong> {product.category}</p>
+                        <p><strong>Department:</strong> {product.department}</p>
+                        <p><strong>Size:</strong> {product.size}</p>
+                        <p><strong>Color:</strong> {product.color.charAt(0).toUpperCase() + product.color.slice(1)}</p>
+                        <p><strong>Tags:</strong> {product.tags.join(", ")}</p>
                       </div>
                     </div>
                   )}
                   {activeTab === "reviews" && (
                     <div className="tab-pane active" role="tabpanel">
                       <div className="product__details__tab__desc">
-                        <h6>Products Infomation</h6>
-                        <p>
-                          Vestibulum ac diam sit amet quam vehicula elementum sed sit
-                          amet dui. Pellentesque in ipsum id orci porta dapibus. Proin
-                          eget tortor risus. Vivamus suscipit tortor eget felis
-                          porttitor volutpat. Vestibulum ac diam sit amet quam vehicula
-                          elementum sed sit amet dui. Donec rutrum congue leo eget
-                          malesuada. Vivamus suscipit tortor eget felis porttitor
-                          volutpat. Curabitur arcu erat, accumsan id imperdiet et,
-                          porttitor at sem. Praesent sapien massa, convallis a
-                          pellentesque nec, egestas non nisi. Vestibulum ac diam sit
-                          amet quam vehicula elementum sed sit amet dui. Vestibulum ante
-                          ipsum primis in faucibus orci luctus et ultrices posuere
-                          cubilia Curae; Donec velit neque, auctor sit amet aliquam vel,
-                          ullamcorper sit amet ligula. Proin eget tortor risus.
-                        </p>
+                        <h6>Customer Reviews ({product.reviews})</h6>
+                        <div style={{ marginBottom: 20 }}>
+                          <div style={{ display: "flex", alignItems: "center", marginBottom: 10 }}>
+                            {renderStars(product.rating)}
+                            <span style={{ marginLeft: 10 }}>{product.rating} out of 5</span>
+                          </div>
+                          <p>Based on {product.reviews} reviews from verified buyers.</p>
+                        </div>
                       </div>
                     </div>
                   )}
@@ -296,53 +251,67 @@ export default function ShopDetailsPage() {
       {/* Product Details Section End */}
 
       {/* Related Product Section Begin */}
-      <section className="related-product">
-        <div className="container">
-          <div className="row">
-            <div className="col-lg-12">
-              <div className="section-title related__product__title">
-                <h2>Related Product</h2>
-              </div>
-            </div>
-          </div>
-          <div className="row">
-            {relatedProducts.map((product, index) => (
-              <div className="col-lg-3 col-md-4 col-sm-6" key={index}>
-                <div className="product__item">
-                  <div
-                    className="product__item__pic set-bg"
-                    style={{ backgroundImage: `url(${product.img})` }}
-                  >
-                    <ul className="product__item__pic__hover">
-                      <li>
-                        <a href="#">
-                          <i className="fa fa-heart"></i>
-                        </a>
-                      </li>
-                      <li>
-                        <a href="#">
-                          <i className="fa fa-retweet"></i>
-                        </a>
-                      </li>
-                      <li>
-                        <a href="#">
-                          <i className="fa fa-shopping-cart"></i>
-                        </a>
-                      </li>
-                    </ul>
-                  </div>
-                  <div className="product__item__text">
-                    <h6>
-                      <a href="#">{product.name}</a>
-                    </h6>
-                    <h5>{product.price}</h5>
-                  </div>
+      {relatedProducts.length > 0 && (
+        <section className="related-product">
+          <div className="container">
+            <div className="row">
+              <div className="col-lg-12">
+                <div className="section-title related__product__title">
+                  <h2>Related Product</h2>
                 </div>
               </div>
-            ))}
+            </div>
+            <div className="row">
+              {relatedProducts.map((rp) => (
+                <div className="col-lg-3 col-md-4 col-sm-6" key={rp.id}>
+                  <div className="product__item">
+                    <div
+                      className="product__item__pic set-bg"
+                      style={{ backgroundImage: `url(${rp.image})` }}
+                    >
+                      <ul className="product__item__pic__hover">
+                        <li>
+                          <a
+                            href="#"
+                            onClick={(e) => {
+                              e.preventDefault();
+                              toggleWishlist(rp);
+                            }}
+                          >
+                            <i className="fa fa-heart"></i>
+                          </a>
+                        </li>
+                        <li>
+                          <Link href={`/shop-details?id=${rp.id}`}>
+                            <i className="fa fa-retweet"></i>
+                          </Link>
+                        </li>
+                        <li>
+                          <a
+                            href="#"
+                            onClick={(e) => {
+                              e.preventDefault();
+                              addToCart(rp);
+                            }}
+                          >
+                            <i className="fa fa-shopping-cart"></i>
+                          </a>
+                        </li>
+                      </ul>
+                    </div>
+                    <div className="product__item__text">
+                      <h6>
+                        <Link href={`/shop-details?id=${rp.id}`}>{rp.name}</Link>
+                      </h6>
+                      <h5>${rp.price.toFixed(2)}</h5>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
-        </div>
-      </section>
+        </section>
+      )}
       {/* Related Product Section End */}
     </>
   );

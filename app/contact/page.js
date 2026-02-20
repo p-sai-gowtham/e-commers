@@ -1,19 +1,44 @@
+"use client";
+
+import { useState } from "react";
 import HeroNormal from "@/components/HeroNormal";
 import Breadcrumb from "@/components/Breadcrumb";
 
 export default function ContactPage() {
+  const [formData, setFormData] = useState({ name: "", email: "", message: "" });
+  const [submitted, setSubmitted] = useState(false);
+  const [errors, setErrors] = useState({});
+
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({ ...prev, [name]: value }));
+    if (errors[name]) {
+      setErrors((prev) => ({ ...prev, [name]: "" }));
+    }
+  };
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    const newErrors = {};
+    if (!formData.name.trim()) newErrors.name = "Name is required";
+    if (!formData.email.trim()) newErrors.email = "Email is required";
+    if (!formData.message.trim()) newErrors.message = "Message is required";
+    if (Object.keys(newErrors).length > 0) {
+      setErrors(newErrors);
+      return;
+    }
+    setSubmitted(true);
+    setFormData({ name: "", email: "", message: "" });
+    setTimeout(() => setSubmitted(false), 4000);
+  };
+
   return (
     <>
-      {/* Hero Section Begin */}
       <HeroNormal />
-      {/* Hero Section End */}
-
-      {/* Breadcrumb Section Begin */}
       <Breadcrumb
         title="Contact Us"
         pages={[{ label: "Home", href: "/" }, { label: "Contact Us" }]}
       />
-      {/* Breadcrumb Section End */}
 
       {/* Contact Section Begin */}
       <section className="contact spad">
@@ -85,16 +110,44 @@ export default function ContactPage() {
               </div>
             </div>
           </div>
-          <form action="#">
+          <form onSubmit={handleSubmit}>
             <div className="row">
               <div className="col-lg-6 col-md-6">
-                <input type="text" placeholder="Your name" />
+                <input
+                  type="text"
+                  name="name"
+                  placeholder="Your name"
+                  value={formData.name}
+                  onChange={handleChange}
+                  style={errors.name ? { borderColor: "#e53637" } : {}}
+                />
+                {errors.name && <small style={{ color: "#e53637" }}>{errors.name}</small>}
               </div>
               <div className="col-lg-6 col-md-6">
-                <input type="text" placeholder="Your Email" />
+                <input
+                  type="text"
+                  name="email"
+                  placeholder="Your Email"
+                  value={formData.email}
+                  onChange={handleChange}
+                  style={errors.email ? { borderColor: "#e53637" } : {}}
+                />
+                {errors.email && <small style={{ color: "#e53637" }}>{errors.email}</small>}
               </div>
               <div className="col-lg-12 text-center">
-                <textarea placeholder="Your message"></textarea>
+                <textarea
+                  name="message"
+                  placeholder="Your message"
+                  value={formData.message}
+                  onChange={handleChange}
+                  style={errors.message ? { borderColor: "#e53637" } : {}}
+                ></textarea>
+                {errors.message && <small style={{ color: "#e53637", display: "block", marginBottom: 10 }}>{errors.message}</small>}
+                {submitted && (
+                  <p style={{ color: "#7fad39", marginBottom: 15, fontSize: 16 }}>
+                    Thank you! Your message has been sent successfully.
+                  </p>
+                )}
                 <button type="submit" className="site-btn">
                   SEND MESSAGE
                 </button>

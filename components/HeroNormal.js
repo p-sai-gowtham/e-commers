@@ -1,4 +1,34 @@
+"use client";
+
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+import Link from "next/link";
+
+const departmentsList = [
+  "Fresh Fruits",
+  "Dried Fruits",
+  "Vegetables",
+  "Juice",
+  "Fruit & Nut Gifts",
+  "Fresh Berries",
+  "Ocean Foods",
+  "Butter & Eggs",
+  "Fresh Onion",
+  "Oatmeal",
+  "Fresh Bananas",
+];
+
 export default function HeroNormal() {
+  const [searchQuery, setSearchQuery] = useState("");
+  const router = useRouter();
+
+  const handleSearch = (e) => {
+    e.preventDefault();
+    if (searchQuery.trim()) {
+      router.push(`/shop?search=${encodeURIComponent(searchQuery.trim())}`);
+    }
+  };
+
   return (
     <section className="hero hero-normal">
       <div className="container">
@@ -10,30 +40,33 @@ export default function HeroNormal() {
                 <span>All departments</span>
               </div>
               <ul>
-                <li><a href="#">Fresh Meat</a></li>
-                <li><a href="#">Vegetables</a></li>
-                <li><a href="#">Fruit &amp; Nut Gifts</a></li>
-                <li><a href="#">Fresh Berries</a></li>
-                <li><a href="#">Ocean Foods</a></li>
-                <li><a href="#">Butter &amp; Eggs</a></li>
-                <li><a href="#">Fastfood</a></li>
-                <li><a href="#">Fresh Onion</a></li>
-                <li><a href="#">Papayaya &amp; Crisps</a></li>
-                <li><a href="#">Oatmeal</a></li>
-                <li><a href="#">Fresh Bananas</a></li>
+                {departmentsList.map((dept, index) => (
+                  <li key={index}>
+                    <Link href={`/shop?department=${encodeURIComponent(dept)}`}>
+                      {dept}
+                    </Link>
+                  </li>
+                ))}
               </ul>
             </div>
           </div>
           <div className="col-lg-9">
             <div className="hero__search">
               <div className="hero__search__form">
-                <form action="#">
+                <form onSubmit={handleSearch}>
                   <div className="hero__search__categories">
                     All Categories
                     <span className="arrow_carrot-down"></span>
                   </div>
-                  <input type="text" placeholder="What do yo u need?" />
-                  <button type="submit" className="site-btn">SEARCH</button>
+                  <input
+                    type="text"
+                    placeholder="What do you need?"
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                  />
+                  <button type="submit" className="site-btn">
+                    SEARCH
+                  </button>
                 </form>
               </div>
               <div className="hero__search__phone">

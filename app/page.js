@@ -2,72 +2,63 @@
 
 import { useState } from "react";
 import Link from "next/link";
-
-const featuredProducts = [
-  { id: 1, image: "/img/featured/feature-1.jpg", name: "Crab Pool Security", price: "$30.00", categories: ["oranges", "fresh-meat"] },
-  { id: 2, image: "/img/featured/feature-2.jpg", name: "Crab Pool Security", price: "$30.00", categories: ["vegetables", "fastfood"] },
-  { id: 3, image: "/img/featured/feature-3.jpg", name: "Crab Pool Security", price: "$30.00", categories: ["vegetables", "fresh-meat"] },
-  { id: 4, image: "/img/featured/feature-4.jpg", name: "Crab Pool Security", price: "$30.00", categories: ["fastfood", "oranges"] },
-  { id: 5, image: "/img/featured/feature-5.jpg", name: "Crab Pool Security", price: "$30.00", categories: ["fresh-meat", "vegetables"] },
-  { id: 6, image: "/img/featured/feature-6.jpg", name: "Crab Pool Security", price: "$30.00", categories: ["oranges", "fastfood"] },
-  { id: 7, image: "/img/featured/feature-7.jpg", name: "Crab Pool Security", price: "$30.00", categories: ["fresh-meat", "vegetables"] },
-  { id: 8, image: "/img/featured/feature-8.jpg", name: "Crab Pool Security", price: "$30.00", categories: ["fastfood", "vegetables"] },
-];
+import { useRouter } from "next/navigation";
+import { useCart } from "../context/CartContext";
+import products, { categories, getFeaturedProducts, getLatestProducts } from "../data/products";
+import blogs from "../data/blogs";
 
 const filterOptions = [
-  { label: "All", value: "*" },
-  { label: "Oranges", value: "oranges" },
-  { label: "Fresh Meat", value: "fresh-meat" },
-  { label: "Vegetables", value: "vegetables" },
-  { label: "Fastfood", value: "fastfood" },
-];
-
-const categories = [
-  { name: "Fresh Fruit", image: "/img/categories/cat-1.jpg" },
-  { name: "Dried Fruit", image: "/img/categories/cat-2.jpg" },
-  { name: "Vegetables", image: "/img/categories/cat-3.jpg" },
-  { name: "drink fruits", image: "/img/categories/cat-4.jpg" },
+  { label: "All", value: "All" },
+  { label: "Fresh Fruit", value: "Fresh Fruit" },
+  { label: "Dried Fruit", value: "Dried Fruit" },
+  { label: "Vegetables", value: "Vegetables" },
+  { label: "Drink Fruits", value: "Drink Fruits" },
 ];
 
 const departmentsList = [
-  "Fresh Meat",
+  "Fresh Fruits",
+  "Dried Fruits",
   "Vegetables",
+  "Juice",
   "Fruit & Nut Gifts",
   "Fresh Berries",
   "Ocean Foods",
   "Butter & Eggs",
-  "Fastfood",
   "Fresh Onion",
-  "Papayaya & Crisps",
   "Oatmeal",
   "Fresh Bananas",
 ];
 
-const latestProductColumns = [
-  { title: "Latest Products" },
-  { title: "Top Rated Products" },
-  { title: "Review Products" },
-];
-
-const latestProducts = [
-  { image: "/img/latest-product/lp-1.jpg", name: "Crab Pool Security", price: "$30.00" },
-  { image: "/img/latest-product/lp-2.jpg", name: "Crab Pool Security", price: "$30.00" },
-  { image: "/img/latest-product/lp-3.jpg", name: "Crab Pool Security", price: "$30.00" },
-];
-
-const blogPosts = [
-  { image: "/img/blog/blog-1.jpg", title: "Cooking tips make cooking simple", date: "May 4,2019", comments: "5" },
-  { image: "/img/blog/blog-2.jpg", title: "6 ways to prepare breakfast for 30", date: "May 4,2019", comments: "5" },
-  { image: "/img/blog/blog-3.jpg", title: "Visit the clean farm in the US", date: "May 4,2019", comments: "5" },
-];
-
 export default function HomePage() {
-  const [activeFilter, setActiveFilter] = useState("*");
+  const [activeFilter, setActiveFilter] = useState("All");
+  const [searchQuery, setSearchQuery] = useState("");
+  const router = useRouter();
+  const { addToCart, toggleWishlist } = useCart();
 
+  const featured = getFeaturedProducts(8);
   const filteredProducts =
-    activeFilter === "*"
-      ? featuredProducts
-      : featuredProducts.filter((product) => product.categories.includes(activeFilter));
+    activeFilter === "All"
+      ? featured
+      : featured.filter((p) => p.category === activeFilter);
+
+  const latest = getLatestProducts(3);
+  const topRated = [...products].filter((p) => p.rating === 5).slice(0, 3);
+  const reviewed = [...products].sort((a, b) => b.reviews - a.reviews).slice(0, 3);
+
+  const latestProductColumns = [
+    { title: "Latest Products", items: latest },
+    { title: "Top Rated Products", items: topRated },
+    { title: "Review Products", items: reviewed },
+  ];
+
+  const blogPosts = blogs.slice(0, 3);
+
+  const handleSearch = (e) => {
+    e.preventDefault();
+    if (searchQuery.trim()) {
+      router.push(`/shop?search=${encodeURIComponent(searchQuery.trim())}`);
+    }
+  };
 
   return (
     <>
@@ -84,7 +75,7 @@ export default function HomePage() {
                 <ul>
                   {departmentsList.map((dept, index) => (
                     <li key={index}>
-                      <Link href="#">{dept}</Link>
+                      <Link href={`/shop?department=${encodeURIComponent(dept)}`}>{dept}</Link>
                     </li>
                   ))}
                 </ul>
@@ -93,12 +84,17 @@ export default function HomePage() {
             <div className="col-lg-9">
               <div className="hero__search">
                 <div className="hero__search__form">
-                  <form action="#">
+                  <form onSubmit={handleSearch}>
                     <div className="hero__search__categories">
                       All Categories
                       <span className="arrow_carrot-down"></span>
                     </div>
-                    <input type="text" placeholder="What do yo u need?" />
+                    <input
+                      type="text"
+                      placeholder="What do you need?"
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                    />
                     <button type="submit" className="site-btn">
                       SEARCH
                     </button>
@@ -125,7 +121,7 @@ export default function HomePage() {
                     100% Organic
                   </h2>
                   <p>Free Pickup and Delivery Available</p>
-                  <Link href="#" className="primary-btn">
+                  <Link href="/shop" className="primary-btn">
                     SHOP NOW
                   </Link>
                 </div>
@@ -144,10 +140,14 @@ export default function HomePage() {
               <div className="col-lg-3" key={index}>
                 <div
                   className="categories__item set-bg"
-                  style={{ backgroundImage: `url(${cat.image})` }}
+                  style={{
+                    backgroundImage: `url(/img/categories/cat-${index + 1}.jpg)`,
+                  }}
                 >
                   <h5>
-                    <Link href="#">{cat.name}</Link>
+                    <Link href={`/shop?category=${encodeURIComponent(cat)}`}>
+                      {cat}
+                    </Link>
                   </h5>
                 </div>
               </div>
@@ -182,10 +182,7 @@ export default function HomePage() {
           </div>
           <div className="row featured__filter">
             {filteredProducts.map((product) => (
-              <div
-                className={`col-lg-3 col-md-4 col-sm-6 mix ${product.categories.join(" ")}`}
-                key={product.id}
-              >
+              <div className="col-lg-3 col-md-4 col-sm-6" key={product.id}>
                 <div className="featured__item">
                   <div
                     className="featured__item__pic set-bg"
@@ -193,17 +190,29 @@ export default function HomePage() {
                   >
                     <ul className="featured__item__pic__hover">
                       <li>
-                        <a href="#">
+                        <a
+                          href="#"
+                          onClick={(e) => {
+                            e.preventDefault();
+                            toggleWishlist(product);
+                          }}
+                        >
                           <i className="fa fa-heart"></i>
                         </a>
                       </li>
                       <li>
-                        <a href="#">
+                        <Link href={`/shop-details?id=${product.id}`}>
                           <i className="fa fa-retweet"></i>
-                        </a>
+                        </Link>
                       </li>
                       <li>
-                        <a href="#">
+                        <a
+                          href="#"
+                          onClick={(e) => {
+                            e.preventDefault();
+                            addToCart(product);
+                          }}
+                        >
                           <i className="fa fa-shopping-cart"></i>
                         </a>
                       </li>
@@ -211,9 +220,11 @@ export default function HomePage() {
                   </div>
                   <div className="featured__item__text">
                     <h6>
-                      <Link href="#">{product.name}</Link>
+                      <Link href={`/shop-details?id=${product.id}`}>
+                        {product.name}
+                      </Link>
                     </h6>
-                    <h5>{product.price}</h5>
+                    <h5>${product.price.toFixed(2)}</h5>
                   </div>
                 </div>
               </div>
@@ -251,16 +262,20 @@ export default function HomePage() {
                 <div className="latest-product__text">
                   <h4>{column.title}</h4>
                   <div className="latest-prdouct__slider__item">
-                    {latestProducts.map((product, prodIndex) => (
-                      <a href="#" className="latest-product__item" key={prodIndex}>
+                    {column.items.map((product) => (
+                      <Link
+                        href={`/shop-details?id=${product.id}`}
+                        className="latest-product__item"
+                        key={product.id}
+                      >
                         <div className="latest-product__item__pic">
-                          <img src={product.image} alt="" />
+                          <img src={product.image} alt={product.name} />
                         </div>
                         <div className="latest-product__item__text">
                           <h6>{product.name}</h6>
-                          <span>{product.price}</span>
+                          <span>${product.price.toFixed(2)}</span>
                         </div>
-                      </a>
+                      </Link>
                     ))}
                   </div>
                 </div>
@@ -282,11 +297,11 @@ export default function HomePage() {
             </div>
           </div>
           <div className="row">
-            {blogPosts.map((post, index) => (
-              <div className="col-lg-4 col-md-4 col-sm-6" key={index}>
+            {blogPosts.map((post) => (
+              <div className="col-lg-4 col-md-4 col-sm-6" key={post.id}>
                 <div className="blog__item">
                   <div className="blog__item__pic">
-                    <img src={post.image} alt="" />
+                    <img src={post.image} alt={post.title} />
                   </div>
                   <div className="blog__item__text">
                     <ul>
@@ -298,12 +313,11 @@ export default function HomePage() {
                       </li>
                     </ul>
                     <h5>
-                      <Link href="#">{post.title}</Link>
+                      <Link href={`/blog-details?id=${post.id}`}>
+                        {post.title}
+                      </Link>
                     </h5>
-                    <p>
-                      Sed quia non numquam modi tempora indunt ut labore et dolore magnam
-                      aliquam quaerat{" "}
-                    </p>
+                    <p>{post.excerpt.substring(0, 80)}...</p>
                   </div>
                 </div>
               </div>

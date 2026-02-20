@@ -1,6 +1,21 @@
+"use client";
+
+import { useState } from "react";
 import Link from "next/link";
 
 export default function Footer() {
+  const [email, setEmail] = useState("");
+  const [subscribed, setSubscribed] = useState(false);
+
+  const handleSubscribe = (e) => {
+    e.preventDefault();
+    if (email.trim() && email.includes("@")) {
+      setSubscribed(true);
+      setEmail("");
+      setTimeout(() => setSubscribed(false), 3000);
+    }
+  };
+
   return (
     <footer className="footer spad">
       <div className="container">
@@ -9,7 +24,7 @@ export default function Footer() {
             <div className="footer__about">
               <div className="footer__about__logo">
                 <Link href="/">
-                  <img src="/img/logo.png" alt="" />
+                  <img src="/img/logo.png" alt="Ogani" />
                 </Link>
               </div>
               <ul>
@@ -23,20 +38,20 @@ export default function Footer() {
             <div className="footer__widget">
               <h6>Useful Links</h6>
               <ul>
-                <li><a href="#">About Us</a></li>
-                <li><a href="#">About Our Shop</a></li>
-                <li><a href="#">Secure Shopping</a></li>
-                <li><a href="#">Delivery infomation</a></li>
-                <li><a href="#">Privacy Policy</a></li>
-                <li><a href="#">Our Sitemap</a></li>
+                <li><Link href="/">Home</Link></li>
+                <li><Link href="/shop">Shop</Link></li>
+                <li><Link href="/cart">Shopping Cart</Link></li>
+                <li><Link href="/checkout">Checkout</Link></li>
+                <li><Link href="/blog">Blog</Link></li>
+                <li><Link href="/contact">Contact</Link></li>
               </ul>
               <ul>
-                <li><a href="#">Who We Are</a></li>
-                <li><a href="#">Our Services</a></li>
-                <li><a href="#">Projects</a></li>
-                <li><a href="#">Contact</a></li>
-                <li><a href="#">Innovation</a></li>
-                <li><a href="#">Testimonials</a></li>
+                <li><Link href="/shop?category=Fresh+Fruit">Fresh Fruit</Link></li>
+                <li><Link href="/shop?category=Vegetables">Vegetables</Link></li>
+                <li><Link href="/shop?category=Dried+Fruit">Dried Fruit</Link></li>
+                <li><Link href="/shop?category=Drink+Fruits">Drink Fruits</Link></li>
+                <li><Link href="/blog">Blog Posts</Link></li>
+                <li><Link href="/contact">Support</Link></li>
               </ul>
             </div>
           </div>
@@ -44,25 +59,27 @@ export default function Footer() {
             <div className="footer__widget">
               <h6>Join Our Newsletter Now</h6>
               <p>Get E-mail updates about our latest shop and special offers.</p>
-              <form action="#">
-                <input type="text" placeholder="Enter your mail" />
+              <form onSubmit={handleSubscribe}>
+                <input
+                  type="text"
+                  placeholder="Enter your mail"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                />
                 <button type="submit" className="site-btn">
                   Subscribe
                 </button>
               </form>
+              {subscribed && (
+                <p style={{ color: "#7fad39", marginTop: 10, fontSize: 14 }}>
+                  Thank you for subscribing!
+                </p>
+              )}
               <div className="footer__widget__social">
-                <a href="#">
-                  <i className="fa fa-facebook"></i>
-                </a>
-                <a href="#">
-                  <i className="fa fa-instagram"></i>
-                </a>
-                <a href="#">
-                  <i className="fa fa-twitter"></i>
-                </a>
-                <a href="#">
-                  <i className="fa fa-pinterest"></i>
-                </a>
+                <a href="#"><i className="fa fa-facebook"></i></a>
+                <a href="#"><i className="fa fa-instagram"></i></a>
+                <a href="#"><i className="fa fa-twitter"></i></a>
+                <a href="#"><i className="fa fa-pinterest"></i></a>
               </div>
             </div>
           </div>

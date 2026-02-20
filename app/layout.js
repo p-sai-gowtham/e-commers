@@ -1,6 +1,8 @@
 import { Cairo } from "next/font/google";
 import Header from "../components/Header";
 import Footer from "../components/Footer";
+import { CartProvider } from "../context/CartContext";
+import Notification from "../components/Notification";
 
 const cairo = Cairo({
   subsets: ["latin"],
@@ -9,8 +11,8 @@ const cairo = Cairo({
 });
 
 export const metadata = {
-  title: "Ogani | Template",
-  description: "Ogani Template",
+  title: "Ogani | Organic Food Store",
+  description: "Ogani - Fresh organic food delivered to your door",
 };
 
 export default function RootLayout({ children }) {
@@ -47,9 +49,12 @@ export default function RootLayout({ children }) {
         <link rel="stylesheet" href="/css/style.css" type="text/css" />
       </head>
       <body>
-        <Header />
-        {children}
-        <Footer />
+        <CartProvider>
+          <Notification />
+          <Header />
+          {children}
+          <Footer />
+        </CartProvider>
       </body>
     </html>
   );
